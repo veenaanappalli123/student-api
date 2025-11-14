@@ -1,4 +1,7 @@
-const express = require("express")
+
+import { logMiddleware } from "./middleware/middleware.js"
+
+import express from "express"
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args)) // workaround for fetch in Node
 const app = express()
 const PORT = 3000
@@ -24,10 +27,10 @@ app.use(async (req, res, next) => {
   next()
 })
 
-app.get("/", (req, res) => {
-  const data = req.data
-  res.json({ users, data })
+app.get("/", logMiddleware, (req, res) => {
+  res.json(users)
 })
+
 
 app.post("/", (req, res) => {
   console.log(req.body)
