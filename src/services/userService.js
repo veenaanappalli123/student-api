@@ -1,46 +1,29 @@
-import db from '../config/database.js'
+import User from '../models/User.js'
 
-// Get all users
-export const getAllUsers = () => {
-  const stmt = db.prepare('SELECT * FROM users ORDER BY id')
-  return stmt.all()
-}
+export const getAllUsers = () => User.findAll()
 
-// Get user by ID
-export const getUserById = (id) => {
-  const stmt = db.prepare('SELECT * FROM users WHERE id = ?')
-  return stmt.get(id)
-}
+export const getUserById = (id) => User.findById(id)
 
-// Create new user
 export const createUser = ({ name, email }) => {
-  if (email) {
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email)
-    if (existing) throw new Error('Email already exists')
+  if (email && User.emailExists(email)) {
+    throw new Error('Email already exists')
   }
-  const stmt = db.prepare('INSERT INTO users (name, email) VALUES (?, ?)')
-  const result = stmt.run(name, email || null)
-  return getUserById(result.lastInsertRowid)
+  return User.create({ name, email })
 }
 
-// Update user
 export const updateUser = (id, { name, email }) => {
-  const user = getUserById(id)
-  if (!user) return null
+  const existingUser = User.findById(id)
+  if (!existingUser) return null
 
-  if (email && email !== user.email) {
-    const existing = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, id)
-    if (existing) throw new Error('Email already exists')
+  if (email && email !== existingUser.email && User.emailExists(email, id)) {
+    throw new Error('Email already exists')
   }
 
-  const stmt = db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
-  stmt.run(name || user.name, email || user.email, id)
-  return getUserById(id)
+  return User.update(id, { name, email })
 }
 
-// Delete user
-export const deleteUser = (id) => {
-  const stmt = db.prepare('DELETE FROM users WHERE id = ?')
-  const result = stmt.run(id)
-  return result.changes > 0
-}
+export const deleteUser = (id) => User.delete(id)
+
+export const getUserByEmail = (email) => User.findByEmail(email)
+
+export const getUserCount = () => User.count()
