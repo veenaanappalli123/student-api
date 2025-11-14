@@ -1,10 +1,9 @@
-const express = require("express")   // import express
-const app = express()                // create app instance
-const PORT = 3000                    // define port
+const express = require("express")
+const app = express()
+const PORT = 3000
 
-app.use(express.json())              // middleware to parse JSON
+app.use(express.json())
 
-// simple route
 app.get("/", (req, res) => {
     res.json({
         firstName: "John",
@@ -12,7 +11,6 @@ app.get("/", (req, res) => {
     })
 })
 
-// start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)
 })
