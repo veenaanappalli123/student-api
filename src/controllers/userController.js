@@ -22,11 +22,14 @@ export const getUserById = (req, res) => {
 
 export const createUser = (req, res) => {
   try {
-    const { name } = req.body
+    const { name, email } = req.body
     if (!name) return res.status(400).json({ message: "Name is required" })
-    const newUser = userService.createUser({ name })
+    const newUser = userService.createUser({ name, email })
     res.status(201).json(newUser)
   } catch (error) {
+    if (error.message === 'Email already exists') {
+      return res.status(409).json({ message: error.message })
+    }
     res.status(500).json({ message: error.message })
   }
 }
@@ -34,11 +37,14 @@ export const createUser = (req, res) => {
 export const updateUser = (req, res) => {
   try {
     const { id } = req.params
-    const userData = req.body
-    const updatedUser = userService.updateUser(id, userData)
+    const { name, email } = req.body
+    const updatedUser = userService.updateUser(id, { name, email })
     if (!updatedUser) return res.status(404).json({ message: "User not found" })
     res.status(200).json(updatedUser)
   } catch (error) {
+    if (error.message === 'Email already exists') {
+      return res.status(409).json({ message: error.message })
+    }
     res.status(500).json({ message: error.message })
   }
 }

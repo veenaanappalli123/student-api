@@ -1,35 +1,46 @@
-let users = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-  { id: 4, name: "Dave" },
-]
+import db from '../config/database.js'
 
-export const getAllUsers = () => users
+// Get all users
+export const getAllUsers = () => {
+  const stmt = db.prepare('SELECT * FROM users ORDER BY id')
+  return stmt.all()
+}
 
+// Get user by ID
 export const getUserById = (id) => {
-  return users.find(user => user.id === parseInt(id))
+  const stmt = db.prepare('SELECT * FROM users WHERE id = ?')
+  return stmt.get(id)
 }
 
-export const createUser = (userData) => {
-  const newUser = {
-    id: users.length + 1,
-    name: userData.name
+// Create new user
+export const createUser = ({ name, email }) => {
+  if (email) {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email)
+    if (existing) throw new Error('Email already exists')
   }
-  users.push(newUser)
-  return newUser
+  const stmt = db.prepare('INSERT INTO users (name, email) VALUES (?, ?)')
+  const result = stmt.run(name, email || null)
+  return getUserById(result.lastInsertRowid)
 }
 
-export const updateUser = (id, userData) => {
-  const index = users.findIndex(user => user.id === parseInt(id))
-  if (index === -1) return null
-  users[index] = { ...users[index], ...userData }
-  return users[index]
+// Update user
+export const updateUser = (id, { name, email }) => {
+  const user = getUserById(id)
+  if (!user) return null
+
+  if (email && email !== user.email) {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, id)
+    if (existing) throw new Error('Email already exists')
+  }
+
+  const stmt = db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
+  stmt.run(name || user.name, email || user.email, id)
+  return getUserById(id)
 }
 
+// Delete user
 export const deleteUser = (id) => {
-  const index = users.findIndex(user => user.id === parseInt(id))
-  if (index === -1) return false
-  users.splice(index, 1)
-  return true
+  const stmt = db.prepare('DELETE FROM users WHERE id = ?')
+  const result = stmt.run(id)
+  return result.changes > 0
 }
