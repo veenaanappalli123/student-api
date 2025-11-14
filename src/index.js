@@ -1,6 +1,5 @@
-
 import { logMiddleware } from "./middleware/middleware.js"
-
+import { getAllUsers, getUserById, createUser } from "./controllers/userController.js"
 import express from "express"
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args)) // workaround for fetch in Node
 const app = express()
